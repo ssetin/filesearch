@@ -1,7 +1,5 @@
-QT += core
+QT -= core
 QT -= gui
-
-CONFIG += c++11
 
 TARGET = filesearch
 CONFIG += console
@@ -9,4 +7,9 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-SOURCES += main.cpp
+SOURCES += \
+    main.c \
+    strindex.c
+
+HEADERS += \
+    strindex.h
