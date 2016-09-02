@@ -1,24 +1,24 @@
 #include "strindex.h"
 
-/*
-Вы должны написать следующую программу на языке C:
-Вашей программе в качестве аргумента будет передано имя файла, в котором будет находиться множество строк (ASCII символы с кодами от 32 до 127).
-Далее Ваша программа должна считывать строки из stdin, пока не придет строка "exit".
-После каждой считанной строки Ваша программа должна выводить в stdout строку "YES" или "NO" в зависимости от
-того, встречается данная строка в переданном файле или нет. Размер файла со словарем не превосходит 128мб.
-Напишите как можно более эффективное решение и будьте готовы объяснить, почему Вы выбрали именно это решение.
-В качестве ответа пришлите ссылку на репозиторий с вашей программой и makefile'ом. Программа должна
-компилироваться GCC 4.7.2.
-*/
-
 strIndex sindex;
+
 
 int main(int argc, char *argv[]){
 
     char cmd[128];
 
+    //printf("%d\n\n",strcmp("fuller","abba"));
 
-    if(!LoadIndex("txt.txt",&sindex)){
+    /*strIndexInsert(&sindex,0,"1");
+    strIndexInsert(&sindex,1,"2");
+    strIndexInsert(&sindex,1,"1.5");
+    strIndexInsert(&sindex,2,"1.7");
+    strIndexInsert(&sindex,-1,"3");
+    strIndexInsert(&sindex,0,"0");
+    strIndexInsert(&sindex,5,"2.1");
+    strIndexInsert(&sindex,-1,"5");*/
+
+    if(!LoadIndex("voc.txt",&sindex)){
         printf("Error creating index\n");
         return 1;
     }
@@ -27,9 +27,15 @@ int main(int argc, char *argv[]){
         printf("%d. %s\n",k+1,strIndexGet(&sindex,k));
     }
 
+    while(1){
+        fgets(cmd, sizeof(cmd), stdin);
+        if(!strcmp("exit",cmd))
+            break;
+        if(!strcmp("",cmd))
+            break;
 
 
-    fgets(cmd, sizeof(cmd), stdin);
+    }
     FreestrIndex(&sindex);
     printf("Fin.\n");
 

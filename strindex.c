@@ -4,24 +4,26 @@
 
 void FreestrIndex(strIndex *idx){
     strNode *ptr=idx->first;
+    strNode *tmp=NULL;
 
     while(ptr!=NULL){
-        free(ptr->str);
-        free(ptr);
+        tmp=ptr;
         ptr=ptr->next;
+        free(tmp->str);
+        free(tmp);
+
     }
-    /*for(int k=0;k<i->size;k++)
-        free(i->strings[k]);
-    free(i->strings);*/
+    idx->first=NULL;
+    idx->size=0;
 }
 
 char* strIndexGet(strIndex *idx,int pos){
     strNode *ptr=idx->first;
     int res=0;
 
-    while((ptr=ptr->next)!=NULL && res!=pos){
+    while(ptr!=NULL && res!=pos){
+        ptr=ptr->next;
         res++;
-        //printf("found %s\n",ptr->str);
     }
     if(ptr!=NULL)
         return ptr->str;
@@ -29,13 +31,21 @@ char* strIndexGet(strIndex *idx,int pos){
 }
 
 void strIndexInsert(strIndex *idx,int pos,char *str){
-    if(idx==NULL)
+    if(idx==NULL || str==NULL)
         return;
     int res=0;
     strNode *node=(strNode*)malloc(sizeof(strNode));
-    node->str=(char*)malloc(sizeof(char)*strlen(str));
+    if(node==NULL){
+        printf("Memory allocation error for %d node",idx->size);
+        return;
+    }
+    //node->str=(char*)calloc(strlen(str)+1,sizeof(char));
+    node->str=(char*)malloc((strlen(str)+1)*sizeof(char));
+    if(node->str==NULL){
+        printf("Memory allocation error for string st %d node",idx->size);
+        return;
+    }
     strcpy(node->str,str);
-    //printf("len %d, name %s\n",sizeof(char)*strlen(str),str);
     node->next=NULL;
     node->index=0;
 
@@ -44,22 +54,23 @@ void strIndexInsert(strIndex *idx,int pos,char *str){
         idx->size=1;
         return;
     }
-    if(pos==0 || pos==-1){
+    if(pos==0){
         node->next=idx->first;
         idx->first=node;
         idx->size++;
         return;
     }
+    if(pos==-1)
+        pos=idx->size;
 
-    strNode *ptr=idx->first;
-    while((ptr=ptr->next)!=NULL && res<pos){
+    strNode *ptr=idx->first;    
+    while(ptr!=NULL && res!=pos-1){
+        ptr=ptr->next;
         res++;
-       // printf("next %d\n",res);
     }
     if(ptr!=NULL){
-        //printf("%d element\n",res);
+        node->next=ptr->next;
         ptr->next=node;
-        ptr->index=pos+1;
         idx->size++;
     }
 
@@ -68,27 +79,32 @@ void strIndexInsert(strIndex *idx,int pos,char *str){
 
 bool LoadIndex(const char* filename,strIndex *idx){
     FILE *file;
-    char str[128];
-    int tmplen=0, k=-1;
+    char buffer[128];
+    int tmplen=0, k=0, isize=0;
 
     file = fopen(filename,"r");
     if(file == NULL) {
         return false;
     }
 
-    idx->size=0;
-
-    while(fgets(str,sizeof(str),file) && idx->size<1000) {
-        tmplen=strlen(str);
-        if (tmplen != 0 && str[tmplen-1] == '\n') {
-            str[tmplen-1] = '\0';
-        }
-        k=strIndexbSearch(idx,str);
-        //if(k>1)
-        //    printf("found bigger at k=%d\n",k);
-        strIndexInsert(idx,k,str);
+    while(fgets(buffer,sizeof(buffer),file)) {
+        isize++;
     }
-    printf("%d strings loaded\n",idx->size);
+    fseek(file,0,SEEK_SET);
+
+    FreestrIndex(idx);
+
+    while(fgets(buffer,sizeof(buffer),file)!=NULL){
+        tmplen=strlen(buffer);
+        if (tmplen != 0 && buffer[tmplen-1] == '\n') {
+            buffer[tmplen-1] = '\0';
+        }
+        k=strIndexbSearch(idx,buffer);
+        strIndexInsert(idx,k,buffer);
+        if(idx->size%500==0)
+            printf("\rLoading index...(%d)",idx->size);
+    }
+    printf("\rLoading index. Done(%d)\n",idx->size);
 
     fclose(file);
     return true;
@@ -102,8 +118,9 @@ void swap(char *str1,char *str2){
     str2=tmp;
 }
 
-int strIndexbSearch(strIndex *idx,char *lookfor){
+int strIndexbSearch(strIndex *idx,const char *lookfor){
     if(idx->size==0 || lookfor==NULL) return -1;
+
     int begin=0, end=idx->size;
     int middle=idx->size/2, premiddle=0;
 
@@ -122,8 +139,7 @@ int strIndexbSearch(strIndex *idx,char *lookfor){
         if(mstr==NULL){
             return -1;
         }else{
-            printf("%s and %s\n",mstr,lookfor);
-            if(strncmp(mstr,lookfor,2)>0){
+            if(strcmp(mstr,lookfor)>0){
                 end=middle;
             }else{
                 begin=middle;
