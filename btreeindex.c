@@ -45,6 +45,10 @@ bool btrIndexSearch(btrIndex *idx,const char *lookfor){
 }
 
 void btrFreeIndex(btrIndex *idx){
+    if(idx==NULL || idx->root==NULL)
+        return;
+
+    //while()
 }
 
 btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
@@ -54,27 +58,26 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
 
     while(1){
         fres=strcmp(newnode->str,node->str);
-        if(fres==0)
-            break;
+        if(fres==0){
+            return node;
+        }
         if(fres>0){
             if(node->bigger==NULL){
                 node->bigger=newnode;
                 idx->size++;
-                break;
+                return newnode;
             }
             else{
-                btrAddToNode(idx,node->bigger,newnode);
-                break;
+                return btrAddToNode(idx,node->bigger,newnode);
             }
         }else{
             if(node->smaller==NULL){
                 node->smaller=newnode;
                 idx->size++;
-                break;
+                return newnode;
             }
             else{
-                btrAddToNode(idx,node->smaller,newnode);
-                break;
+                return btrAddToNode(idx,node->smaller,newnode);
             }
         }
     }
@@ -111,7 +114,7 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
     if(idx==NULL)
         return false;
     FILE *file;
-    char buffer[128];
+    char buffer[255];
     int tmplen=0;
 
     file = fopen(filename,"r");
