@@ -1,7 +1,13 @@
 #include "btreeindex.h"
 
 
-
+/*!
+    Search string in current node and his childrens
+    \param[in]  idx      search-tree
+    \param[in]  node     current node
+    \param[in]  lookfor  search string
+    \param[out] node where we find it
+*/
 btrNode* btrSearchInNode(btrIndex *idx,btrNode *node,const char *lookfor){
     if(idx==NULL || node==NULL || lookfor==NULL)
         return NULL;
@@ -30,13 +36,15 @@ btrNode* btrSearchInNode(btrIndex *idx,btrNode *node,const char *lookfor){
 }
 
 
+/*!
+    Search string in search-tree
+    \param[in]  idx      search-tree
+    \param[in]  lookfor  search string
+    \param[out] node where we find it
+*/
 bool btrIndexSearch(btrIndex *idx,const char *lookfor){
     if(idx==NULL || lookfor==NULL || idx->root==NULL)
         return false;
-
-    if(!strcmp(idx->root->str,lookfor)){
-        return true;
-    }
 
     if(btrSearchInNode(idx,idx->root,lookfor))
         return true;
@@ -44,13 +52,53 @@ bool btrIndexSearch(btrIndex *idx,const char *lookfor){
     return false;
 }
 
-void btrFreeIndex(btrIndex *idx){
-    if(idx==NULL || idx->root==NULL)
+/*!
+    Free memory, allocated for node and his childrens
+    \param[in]  idx      search-tree
+    \param[in]  node     node
+*/
+void btrFreeNode(btrIndex *idx,btrNode *node){
+    if(idx==NULL || node==NULL)
         return;
 
-    //while()
+    while(1){
+        if(node->bigger!=NULL){
+            btrFreeNode(idx,node->bigger);
+            node->bigger=NULL;
+        }
+        if(node->smaller!=NULL){
+            btrFreeNode(idx,node->smaller);
+            node->smaller=NULL;
+        }
+        if(node->bigger==NULL && node->smaller==NULL){
+            idx->size--;
+            free(node->str);
+            free(node);
+            node=NULL;
+            break;
+        }
+    }
 }
 
+/*!
+    Free memory, allocated for search-tree nodes
+    \param[in]  idx      search-tree
+*/
+void btrFreeIndex(btrIndex *idx){
+    if(idx==NULL || idx->root==NULL)    
+        return;
+    btrFreeNode(idx,idx->root);
+    idx->root=NULL;
+    idx->size=0;
+}
+
+/*!
+    Add node to search-tree using node data comparsion
+    \param[in]  idx         search-tree
+    \param[in]  node        current node of the tree
+    \param[in]  newnode     new node with new data
+    \param[out] new node inside tree
+*/
 btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
     if(idx==NULL || node==NULL || newnode==NULL)
         return NULL;
@@ -58,14 +106,14 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
 
     while(1){
         fres=strcmp(newnode->str,node->str);
-        if(fres==0){
+        if(fres==0){                        
             return node;
         }
         if(fres>0){
             if(node->bigger==NULL){
                 node->bigger=newnode;
                 idx->size++;
-                return newnode;
+                break;
             }
             else{
                 return btrAddToNode(idx,node->bigger,newnode);
@@ -74,17 +122,22 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
             if(node->smaller==NULL){
                 node->smaller=newnode;
                 idx->size++;
-                return newnode;
+                break;
             }
             else{
                 return btrAddToNode(idx,node->smaller,newnode);
             }
         }
     }
-    return node;
+    return newnode;
 }
 
-void btrIndexInsert(btrIndex *idx,char *str){
+/*!
+    Add string data to search-tree
+    \param[in]  idx        search-tree
+    \param[in]  str        string data
+*/
+void btrIndexInsert(btrIndex *idx,const char *str){
     if(idx==NULL || str==NULL)
         return;
     btrNode *node=(btrNode*)malloc(sizeof(btrNode));
@@ -94,10 +147,10 @@ void btrIndexInsert(btrIndex *idx,char *str){
     }
     node->str=(char*)malloc((strlen(str)+1)*sizeof(char));
     if(node->str==NULL){
-        printf("Memory allocation error for string st %d node",idx->size);
+        printf("Memory allocation error for string at %d node",idx->size);
         return;
     }
-    strcpy(node->str,str);
+    node->str=strcpy(node->str,str);
     node->bigger=NULL;
     node->smaller=NULL;
 
@@ -109,7 +162,12 @@ void btrIndexInsert(btrIndex *idx,char *str){
     btrAddToNode(idx,idx->root,node);
 }
 
-
+/*!
+    Load and build search-tree from file
+    \param[in]  filename    file name
+    \param[in]  idx         search-tree
+    \param[out] true if success or false
+*/
 bool btrLoadIndex(const char* filename,btrIndex *idx){
     if(idx==NULL)
         return false;
@@ -126,15 +184,26 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
 
     while(fgets(buffer,sizeof(buffer),file)!=NULL){
         tmplen=strlen(buffer);
-        if (tmplen != 0 && buffer[tmplen-1] == '\n') {
-            buffer[tmplen-1] = '\0';
+        if (tmplen != 0){
+            if(buffer[tmplen-2] == '\r' && buffer[tmplen-1]=='\n')
+                buffer[tmplen-2] = '\0'; else
+            if(buffer[tmplen-1]=='\n'){
+                buffer[tmplen-1] = '\0';
+            }
+            btrIndexInsert(idx,buffer);
         }
-        btrIndexInsert(idx,buffer);
-        if(idx->size%500==0)
+        if(idx->size%2500==0){
             printf("\rLoading index...(%d)",idx->size);
+        }
     }
     printf("\rLoading index. Done(%d)\n",idx->size);
 
     fclose(file);
     return true;
 }
+
+
+
+
+
+

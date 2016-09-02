@@ -6,8 +6,14 @@ btrIndex sindex;
 int main(int argc, char *argv[]){
 
     char cmd[128];
+    char filename[128];
 
-    if(!btrLoadIndex("voc.txt",&sindex)){
+    if(argc>1)
+        strcpy(filename,argv[1]);
+    else
+        strcpy(filename,"voc.txt");
+
+    if(!btrLoadIndex(filename,&sindex)){
         printf("Error creating index\n");
         return 1;
     }
@@ -27,7 +33,7 @@ int main(int argc, char *argv[]){
 
     }
     btrFreeIndex(&sindex);
-    printf("Fin.\n");
+    printf("\nFin.\n");
 
 
     return 0;
