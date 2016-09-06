@@ -9,7 +9,7 @@
 */
 typedef struct _btrNode{
     char *str;
-    short height;
+    char height;
     struct _btrNode *bigger;
     struct _btrNode *smaller;
 } btrNode;
@@ -41,8 +41,8 @@ void btrFreeNode(btrIndex *idx,btrNode *node);
 /*!
     Avl helpers
 */
-short btrGetNodeHeight(btrNode* node);
-short btrGetNodeBalanceFactor(btrNode* node);
+char btrGetNodeHeight(btrNode* node);
+char btrGetNodeBalanceFactor(btrNode* node);
 void btrRecalcNodeHeight(btrNode* node);
 btrNode* btrRotateRight(btrNode *node);
 btrNode* btrRotateLelf(btrNode *node);

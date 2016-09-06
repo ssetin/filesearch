@@ -11,7 +11,7 @@
 btrNode* btrSearchInNode(btrIndex *idx,btrNode *node,const char *lookfor){
     if(idx==NULL || node==NULL || lookfor==NULL)
         return NULL;
-    int fres=1;
+    char fres=1;
 
     while(fres!=0){
         fres=strcmp(lookfor,node->str);
@@ -102,7 +102,7 @@ void btrFreeIndex(btrIndex *idx){
 btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
     if(idx==NULL || node==NULL || newnode==NULL)
         return NULL;
-    int fres=0;
+    char fres=0;
 
     while(1){
         fres=strcmp(newnode->str,node->str);
@@ -114,7 +114,7 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
                 node->bigger=newnode;
                 idx->size++;
                 //avl
-                btrBalanceNode(newnode);
+                btrBalanceNode(node);
                 break;
             }
             else{
@@ -125,7 +125,7 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
                 node->smaller=newnode;
                 idx->size++;
                 //avl
-                btrBalanceNode(newnode);
+                btrBalanceNode(node);
                 break;
             }
             else{
@@ -157,6 +157,7 @@ void btrIndexInsert(btrIndex *idx,const char *str){
     node->str=strcpy(node->str,str);
     node->bigger=NULL;
     node->smaller=NULL;
+    node->height=0;
 
     if(idx->root==NULL){
         idx->root=node;
@@ -177,7 +178,7 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
         return false;
     FILE *file;
     char buffer[255];
-    int tmplen=0;
+    short tmplen=0;
 
     file = fopen(filename,"r");
     if(file == NULL) {
@@ -196,7 +197,7 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
             }
             btrIndexInsert(idx,buffer);
         }
-        if(idx->size%5000==0){
+        if(idx->size%2500==0){
             printf("\rLoading index...(%d)",idx->size);
         }
     }
@@ -212,7 +213,7 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
     \param[in]  node    node
     \param[out] node height
 */
-short btrGetNodeHeight(btrNode* node){
+char btrGetNodeHeight(btrNode* node){
     if(node==NULL) return 0;
     return node->height;
 }
@@ -221,7 +222,7 @@ short btrGetNodeHeight(btrNode* node){
     \param[in]  node    node
     \param[out] balance factor
 */
-short btrGetNodeBalanceFactor(btrNode* node){
+char btrGetNodeBalanceFactor(btrNode* node){
     if(node==NULL) return 0;
     return btrGetNodeHeight(node->bigger)-btrGetNodeHeight(node->smaller);
 }
@@ -231,8 +232,8 @@ short btrGetNodeBalanceFactor(btrNode* node){
 */
 void btrRecalcNodeHeight(btrNode* node){
     if(node==NULL) return;
-    short biggerl=btrGetNodeHeight(node->bigger);
-    short smallerl=btrGetNodeHeight(node->smaller);
+    char biggerl=btrGetNodeHeight(node->bigger);
+    char smallerl=btrGetNodeHeight(node->smaller);
     node->height=(biggerl>smallerl?biggerl:smallerl)+1;
 }
 /*!
@@ -240,6 +241,7 @@ void btrRecalcNodeHeight(btrNode* node){
     \param[in]  node    node
 */
 btrNode* btrRotateRight(btrNode *node){
+    if(node==NULL) return NULL;
     btrNode *newnode = node->smaller;
     node->smaller = newnode->bigger;
     newnode->bigger = node;
@@ -252,6 +254,7 @@ btrNode* btrRotateRight(btrNode *node){
     \param[in]  node    node
 */
 btrNode* btrRotateLeft(btrNode *node){
+    if(node==NULL) return NULL;
     btrNode *newnode = node->bigger;
     node->bigger = newnode->smaller;
     newnode->smaller = node;
@@ -265,6 +268,7 @@ btrNode* btrRotateLeft(btrNode *node){
     \param[out] balance factor
 */
 btrNode* btrBalanceNode(btrNode* node){
+    if(node==NULL) return NULL;
     btrRecalcNodeHeight(node);
     if( btrGetNodeBalanceFactor(node)==2){
         if( btrGetNodeBalanceFactor(node->bigger)<0)
