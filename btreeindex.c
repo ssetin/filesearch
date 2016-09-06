@@ -113,6 +113,8 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
             if(node->bigger==NULL){
                 node->bigger=newnode;
                 idx->size++;
+                //avl
+                btrBalanceNode(newnode);
                 break;
             }
             else{
@@ -122,6 +124,8 @@ btrNode* btrAddToNode(btrIndex *idx,btrNode *node,btrNode *newnode){
             if(node->smaller==NULL){
                 node->smaller=newnode;
                 idx->size++;
+                //avl
+                btrBalanceNode(newnode);
                 break;
             }
             else{
@@ -192,7 +196,7 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
             }
             btrIndexInsert(idx,buffer);
         }
-        if(idx->size%2500==0){
+        if(idx->size%5000==0){
             printf("\rLoading index...(%d)",idx->size);
         }
     }
@@ -201,6 +205,81 @@ bool btrLoadIndex(const char* filename,btrIndex *idx){
     fclose(file);
     return true;
 }
+
+/*=======================AVL==================================*/
+/*!
+    Get node height
+    \param[in]  node    node
+    \param[out] node height
+*/
+short btrGetNodeHeight(btrNode* node){
+    if(node==NULL) return 0;
+    return node->height;
+}
+/*!
+    Get difference between smaller and bigger subnodes
+    \param[in]  node    node
+    \param[out] balance factor
+*/
+short btrGetNodeBalanceFactor(btrNode* node){
+    if(node==NULL) return 0;
+    return btrGetNodeHeight(node->bigger)-btrGetNodeHeight(node->smaller);
+}
+/*!
+    Recalculate height for node
+    \param[in]  node    node
+*/
+void btrRecalcNodeHeight(btrNode* node){
+    if(node==NULL) return;
+    short biggerl=btrGetNodeHeight(node->bigger);
+    short smallerl=btrGetNodeHeight(node->smaller);
+    node->height=(biggerl>smallerl?biggerl:smallerl)+1;
+}
+/*!
+    Make right rotate for node
+    \param[in]  node    node
+*/
+btrNode* btrRotateRight(btrNode *node){
+    btrNode *newnode = node->smaller;
+    node->smaller = newnode->bigger;
+    newnode->bigger = node;
+    btrRecalcNodeHeight(node);
+    btrRecalcNodeHeight(newnode);
+    return newnode;
+}
+/*!
+    Make left rotate for node
+    \param[in]  node    node
+*/
+btrNode* btrRotateLeft(btrNode *node){
+    btrNode *newnode = node->bigger;
+    node->bigger = newnode->smaller;
+    newnode->smaller = node;
+    btrRecalcNodeHeight(node);
+    btrRecalcNodeHeight(newnode);
+    return newnode;
+}
+/*!
+    Balancing the node
+    \param[in]  node    node
+    \param[out] balance factor
+*/
+btrNode* btrBalanceNode(btrNode* node){
+    btrRecalcNodeHeight(node);
+    if( btrGetNodeBalanceFactor(node)==2){
+        if( btrGetNodeBalanceFactor(node->bigger)<0)
+            node->bigger = btrRotateRight(node->bigger);
+        return btrRotateLeft(node);
+    }
+    if(btrGetNodeBalanceFactor(node)==-2){
+        if( btrGetNodeBalanceFactor(node->smaller)>0)
+            node->smaller = btrRotateLeft(node->smaller);
+        return btrRotateRight(node);
+    }
+    return node;
+}
+
+
 
 
 

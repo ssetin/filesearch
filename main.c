@@ -1,5 +1,6 @@
 #include "btreeindex.h"
 
+
 btrIndex sindex;
 
 
@@ -12,6 +13,7 @@ int main(int argc, char *argv[]){
         strcpy(filename,argv[1]);
     else
         strcpy(filename,"voc.txt");
+
 
     if(!btrLoadIndex(filename,&sindex)){
         printf("Error creating index\n");
